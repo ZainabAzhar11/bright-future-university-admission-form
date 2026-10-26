@@ -329,92 +329,80 @@
 
   </div>
 
-  <script>
+<script>
+  const SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbz6SYQYQ1yygpu4ttRrmT_hYxYPHGs2PY_pSgJp8r1jXKQkXV6S-yaiRKm-TC1InXDY5g/exec";
 
-    function toggleOtherCity() {
-      const city = document.getElementById("city");
-      const otherCity = document.getElementById("otherCity");
+  function toggleOtherCity() {
+    const city = document.getElementById("city");
+    const otherCity = document.getElementById("otherCity");
 
-      if (city.value === "Other") {
-        otherCity.style.display = "block";
-        otherCity.required = true;
-      } else {
-        otherCity.style.display = "none";
-        otherCity.required = false;
-        otherCity.value = "";
-      }
+    if (city.value === "Other") {
+      otherCity.style.display = "block";
+      otherCity.required = true;
+    } else {
+      otherCity.style.display = "none";
+      otherCity.required = false;
+      otherCity.value = "";
     }
+  }
 
-    document.getElementById("admissionForm")
-      .addEventListener("submit", function(event) {
+  document.getElementById("admissionForm")
+    .addEventListener("submit", async function(event) {
+      event.preventDefault();
 
-        event.preventDefault();
+      const citySelection =
+        document.getElementById("city").value;
 
-        const citySelection =
-          document.getElementById("city").value;
-
-        const finalCity = citySelection === "Other"
+      const data = {
+        fullName: document.getElementById("fullName").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        dob: document.getElementById("dob").value,
+        gender: document.getElementById("gender").value,
+        city: citySelection === "Other"
           ? document.getElementById("otherCity").value.trim()
-          : citySelection;
+          : citySelection,
+        qualification: document.getElementById("qualification").value,
+        marks: document.getElementById("marks").value,
+        department: document.getElementById("department").value,
+        address: document.getElementById("address").value.trim()
+      };
 
-        const data = {
-          fullName: document.getElementById("fullName").value.trim(),
-          email: document.getElementById("email").value.trim(),
-          phone: document.getElementById("phone").value.trim(),
-          dob: document.getElementById("dob").value,
-          gender: document.getElementById("gender").value,
-          city: finalCity,
-          qualification: document.getElementById("qualification").value,
-          marks: document.getElementById("marks").value,
-          department: document.getElementById("department").value,
-          address: document.getElementById("address").value.trim()
-        };
+      const button = document.getElementById("submitBtn");
+      const message = document.getElementById("message");
 
-        const button = document.getElementById("submitBtn");
-        const message = document.getElementById("message");
+      button.disabled = true;
+      button.textContent = "Submitting...";
+      message.textContent = "";
+      message.className = "";
 
-        button.disabled = true;
-        button.textContent = "Submitting...";
-        message.textContent = "";
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(data)
+        });
+
+        message.textContent =
+          "Request sent. Please verify your submission in Google Sheets.";
         message.className = "";
 
-        if (typeof google === "undefined" ||
-            !google.script || !google.script.run) {
+      } catch (error) {
+        message.textContent =
+          "Could not send the application. Please try again.";
+        message.className = "error";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Submit Application";
+      }
+    });
+</script>
 
-          message.textContent =
-           https://script.google.com/macros/s/AKfycbz6SYQYQ1yygpu4ttRrmT_hYxYPHGs2PY_pSgJp8r1jXKQkXV6S-yaiRKm-TC1InXDY5g/exec
-          message.className = "error";
-
-          button.disabled = false;
-          button.textContent = "Submit Application";
-          return;
-        }
-
-        google.script.run
-          .withSuccessHandler(function(result) {
-            message.textContent =
-              result || "Application Submitted Successfully!";
-            message.className = "success";
-
-            document.getElementById("admissionForm").reset();
-            toggleOtherCity();
-
-            button.disabled = false;
-            button.textContent = "Submit Application";
-          })
-          .withFailureHandler(function(error) {
-            message.textContent =
-              "Error: " + (error.message || error);
-            message.className = "error";
-
-            button.disabled = false;
-            button.textContent = "Submit Application";
-          })
-          .submitAdmission(data);
-
-      });
-
-  </script>
+  
 
 </body>
 </html>
